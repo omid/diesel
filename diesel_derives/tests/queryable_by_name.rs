@@ -14,7 +14,7 @@ table! {
 #[test]
 fn named_struct_definition() {
     #[derive(Debug, Clone, Copy, PartialEq, Eq, QueryableByName)]
-    #[diesel(table_name = my_structs)]
+    // #[diesel(table_name = my_structs)]
     struct MyStruct {
         foo: i32,
         bar: i32,
@@ -28,7 +28,7 @@ fn named_struct_definition() {
 #[test]
 fn tuple_struct() {
     #[derive(Debug, Clone, Copy, PartialEq, Eq, QueryableByName)]
-    #[diesel(table_name = my_structs)]
+    // #[diesel(table_name = my_structs)]
     struct MyStruct(
         #[diesel(column_name = foo)] i32,
         #[diesel(column_name = bar)] i32,
@@ -42,7 +42,7 @@ fn tuple_struct() {
 #[test]
 fn struct_with_path_in_name() {
     #[derive(Debug, Clone, Copy, PartialEq, Eq, QueryableByName)]
-    #[diesel(table_name = self::my_structs)]
+    // #[diesel(table_name = self::my_structs)]
     struct MyStruct {
         foo: i32,
         bar: i32,
