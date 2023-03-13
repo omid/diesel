@@ -685,7 +685,6 @@ pub fn derive_queryable(input: TokenStream) -> TokenStream {
 /// # use diesel::sql_query;
 /// #
 /// #[derive(QueryableByName, PartialEq, Debug)]
-/// #[diesel(table_name = users)]
 /// struct User {
 ///     id: i32,
 ///     name: String,
@@ -737,7 +736,6 @@ pub fn derive_queryable(input: TokenStream) -> TokenStream {
 /// }
 ///
 /// #[derive(QueryableByName, PartialEq, Debug)]
-/// #[diesel(table_name = users)]
 /// struct User {
 ///     id: i32,
 ///     #[diesel(deserialize_as = LowercaseString)]

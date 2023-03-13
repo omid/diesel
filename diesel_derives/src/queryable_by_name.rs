@@ -1,5 +1,5 @@
 use proc_macro2::TokenStream;
-use syn::{DeriveInput, Expr, Ident, LitStr, Type};
+use syn::{DeriveInput, Ident, LitStr, Type};
 
 use attrs::AttributeSpanWrapper;
 use field::{Field, FieldName};
@@ -37,7 +37,6 @@ pub fn derive(item: DeriveInput) -> TokenStream {
         .params
         .push(parse_quote!(__DB: diesel::backend::Backend));
 
-    let mut check_table_existence = false;
     for field in model.fields() {
         let where_clause = generics.where_clause.get_or_insert(parse_quote!(where));
         let field_ty = field.ty_for_deserialize();
@@ -46,7 +45,7 @@ pub fn derive(item: DeriveInput) -> TokenStream {
                 .predicates
                 .push(parse_quote!(#field_ty: QueryableByName<__DB>));
         } else {
-            let st = sql_type(field, &model, &mut check_table_existence);
+            let st = sql_type(field, &model);
             where_clause
                 .predicates
                 .push(parse_quote!(#field_ty: diesel::deserialize::FromSql<#st, __DB>));
@@ -54,13 +53,6 @@ pub fn derive(item: DeriveInput) -> TokenStream {
     }
 
     let (impl_generics, _, where_clause) = generics.split_for_impl();
-
-    // include_table_def is to have a bit better errors in compile time
-    // in case of a typo in the table_name or missing of table_name attribute
-    if check_table_existence {
-        let table_name = &model.table_names()[0];
-        let _: Expr = parse_quote!({use self::#table_name::table;});
-    }
 
     wrap_in_dummy_mod(quote! {
         use diesel::deserialize::{self, QueryableByName};
@@ -93,14 +85,13 @@ fn get_ident(field: &Field) -> Ident {
     }
 }
 
-fn sql_type(field: &Field, model: &Model, check_table_existence: &mut bool) -> Type {
+fn sql_type(field: &Field, model: &Model) -> Type {
     let table_name = &model.table_names()[0];
 
     match field.sql_type {
         Some(AttributeSpanWrapper { item: ref st, .. }) => st.clone(),
         None => {
             let column_name = field.column_name();
-            *check_table_existence = true;
             parse_quote!(diesel::dsl::SqlTypeOf<#table_name::#column_name>)
         }
     }
