@@ -42,7 +42,7 @@ fn tuple_struct() {
 #[test]
 fn struct_with_path_in_name() {
     #[derive(Debug, Clone, Copy, PartialEq, Eq, QueryableByName)]
-    #[diesel(table_name = self::my_structs)]
+    #[diesel(table_name = my_structs)]
     struct MyStruct {
         foo: i32,
         bar: i32,
