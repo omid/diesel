@@ -38,7 +38,7 @@ pub fn derive(item: DeriveInput) -> TokenStream {
         .params
         .push(parse_quote!(__DB: backend::Backend));
 
-    let mut include_table_def = false;
+    let mut include_table_use = false;
     for field in model.fields() {
         let where_clause = generics.where_clause.get_or_insert(parse_quote!(where));
         let field_ty = field.ty_for_deserialize();
@@ -47,7 +47,7 @@ pub fn derive(item: DeriveInput) -> TokenStream {
                 .predicates
                 .push(parse_quote!(#field_ty: QueryableByName<__DB>));
         } else {
-            let st = sql_type(field, &model, &mut include_table_def);
+            let st = sql_type(field, &model, &mut include_table_use);
             where_clause
                 .predicates
                 .push(parse_quote!(#field_ty: deserialize::FromSql<#st, __DB>));
@@ -59,7 +59,7 @@ pub fn derive(item: DeriveInput) -> TokenStream {
     // include_table_def is to have a bit better errors in compile time
     // in case of a typo in the table_name or missing of table_name attribute
     let table_name = &model.table_names()[0];
-    let include_table_def: Option<Expr> = if include_table_def {
+    let include_table_use: Option<Expr> = if include_table_use {
         Some(parse_quote!({use self::#table_name::table;}))
     } else {
         None
@@ -69,7 +69,7 @@ pub fn derive(item: DeriveInput) -> TokenStream {
         use diesel::deserialize::{self, QueryableByName};
         use diesel::row::{NamedRow};
         use diesel::sql_types::Untyped;
-        #include_table_def
+        #include_table_use
 
         impl #impl_generics QueryableByName<__DB>
             for #struct_name #ty_generics
@@ -97,14 +97,14 @@ fn get_ident(field: &Field) -> Ident {
     }
 }
 
-fn sql_type(field: &Field, model: &Model, include_table_def: &mut bool) -> Type {
+fn sql_type(field: &Field, model: &Model, include_table_use: &mut bool) -> Type {
     let table_name = &model.table_names()[0];
 
     match field.sql_type {
         Some(AttributeSpanWrapper { item: ref st, .. }) => st.clone(),
         None => {
             let column_name = field.column_name();
-            *include_table_def = true;
+            *include_table_use = true;
             parse_quote!(dsl::SqlTypeOf<#table_name::#column_name>)
         }
     }
