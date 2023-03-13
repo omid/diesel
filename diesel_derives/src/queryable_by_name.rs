@@ -1,8 +1,9 @@
+use proc_macro2::TokenStream;
+use syn::{DeriveInput, Expr, Ident, LitStr, Type};
+
 use attrs::AttributeSpanWrapper;
 use field::{Field, FieldName};
 use model::Model;
-use proc_macro2::TokenStream;
-use syn::{DeriveInput, Expr, Ident, LitStr, Type};
 use util::wrap_in_dummy_mod;
 
 pub fn derive(item: DeriveInput) -> TokenStream {
