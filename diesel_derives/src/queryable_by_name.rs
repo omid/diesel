@@ -1,9 +1,8 @@
-use proc_macro2::TokenStream;
-use syn::{DeriveInput, Expr, Ident, LitStr, Type};
-
 use attrs::AttributeSpanWrapper;
 use field::{Field, FieldName};
 use model::Model;
+use proc_macro2::TokenStream;
+use syn::{DeriveInput, Expr, Ident, LitStr, Type};
 use util::wrap_in_dummy_mod;
 
 pub fn derive(item: DeriveInput) -> TokenStream {
@@ -31,12 +30,9 @@ pub fn derive(item: DeriveInput) -> TokenStream {
         }
     });
 
-
     let (_, ty_generics, ..) = item.generics.split_for_impl();
     let mut generics = item.generics.clone();
-    generics
-        .params
-        .push(parse_quote!(__DB: backend::Backend));
+    generics.params.push(parse_quote!(__DB: backend::Backend));
 
     let mut include_table_use = false;
     for field in model.fields() {
