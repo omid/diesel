@@ -24,7 +24,7 @@ pub fn derive(item: DeriveInput) -> TokenStream {
             let name = LitStr::new(&name.to_string(), name.span());
             quote!(
                {
-                   let field = NamedRow::get(row, #name)?;
+                   let field = diesel::row::NamedRow::get(row, #name)?;
                    <#deserialize_ty as Into<#field_ty>>::into(field)
                }
             )
@@ -33,7 +33,9 @@ pub fn derive(item: DeriveInput) -> TokenStream {
 
     let (_, ty_generics, ..) = item.generics.split_for_impl();
     let mut generics = item.generics.clone();
-    generics.params.push(parse_quote!(__DB: backend::Backend));
+    generics
+        .params
+        .push(parse_quote!(__DB: diesel::backend::Backend));
 
     let mut check_table_existence = false;
     for field in model.fields() {
@@ -47,7 +49,7 @@ pub fn derive(item: DeriveInput) -> TokenStream {
             let st = sql_type(field, &model, &mut check_table_existence);
             where_clause
                 .predicates
-                .push(parse_quote!(#field_ty: deserialize::FromSql<#st, __DB>));
+                .push(parse_quote!(#field_ty: diesel::deserialize::FromSql<#st, __DB>));
         }
     }
 
@@ -74,7 +76,7 @@ pub fn derive(item: DeriveInput) -> TokenStream {
                 #(
                     let mut #fields = #initial_field_expr;
                 )*
-                Ok(Self {
+                deserialize::Result::Ok(Self {
                     #(
                         #field_names: #fields,
                     )*
@@ -99,7 +101,7 @@ fn sql_type(field: &Field, model: &Model, check_table_existence: &mut bool) -> T
         None => {
             let column_name = field.column_name();
             *check_table_existence = true;
-            parse_quote!(dsl::SqlTypeOf<#table_name::#column_name>)
+            parse_quote!(diesel::dsl::SqlTypeOf<#table_name::#column_name>)
         }
     }
 }
