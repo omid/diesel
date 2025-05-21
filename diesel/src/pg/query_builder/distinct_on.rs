@@ -1,4 +1,4 @@
-use crate::expression::SelectableExpression;
+use crate::expression::{SelectableExpression, ValidGrouping};
 use crate::pg::Pg;
 use crate::query_builder::order_clause::NoOrderClause;
 use crate::query_builder::{
@@ -280,7 +280,7 @@ impl<ST, F, S, D, W, O, LOf, G, H, Selection> DistinctOnDsl<Selection>
     for SelectStatement<FromClause<F>, S, D, W, O, LOf, G, H>
 where
     F: QuerySource,
-    Selection: SelectableExpression<F>,
+    Selection: SelectableExpression<F> + ValidGrouping<G>,
     Self: SelectQuery<SqlType = ST>,
     O: ValidOrderingForDistinct<DistinctOnClause<Selection>>,
     SelectStatement<FromClause<F>, S, DistinctOnClause<Selection>, W, O, LOf, G, H>:

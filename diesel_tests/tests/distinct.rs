@@ -154,6 +154,26 @@ fn distinct_on_select_order_by_two_columns() {
 
 #[cfg(feature = "postgres")]
 #[diesel_test_helper::test]
+// #[should_panic(
+//     expected = "column \\\"users.name\\\" must appear in the GROUP BY clause or be used in an aggregate function"
+// )]
+fn distinct_on_count() {
+    use crate::schema::users::dsl::*;
+
+    let connection = &mut connection();
+    diesel::sql_query("INSERT INTO users (name) VALUES ('Sean'), ('Sean'), ('Tess')")
+        .execute(connection)
+        .unwrap();
+
+    let source = users.distinct_on(name).count();
+    let expected_data = 2;
+    let data: i64 = source.get_result(connection).unwrap();
+
+    assert_eq!(expected_data, data);
+}
+
+#[cfg(feature = "postgres")]
+#[diesel_test_helper::test]
 fn distinct_of_multiple_columns() {
     use crate::schema::posts;
     use crate::schema::users;
